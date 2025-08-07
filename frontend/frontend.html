@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tic Tac Toe</title>
+</head>
+
+
+<style>
+  #container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 30px;
+  }
+
+  #board {
+    margin-top: 10px;
+  }
+
+  #board div {
+    display: flex;
+  }
+
+  #board button {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    text-align: center;
+  }
+</style>
+
+
+
+
+<body>
+  <div id="container">
+    <button onclick="createBoard()">Start Game</button>
+    <div id="board"></div>
+    <div id="status" style="margin-top: 10px; font-weight: bold;"></div>  <!-- 👈 add this line -->
+  </div>
+
+<script>
+    async function createBoard() {
+    const res = await fetch('create_new_board', {
+        method: 'POST'
+    });
+    const board = await res.json();
+    renderBoard(board);
+    }
+
+    function renderBoard(board) {
+    const boardDiv = document.getElementById('board');
+    boardDiv.innerHTML = '';
+
+    board.forEach((row, rowIndex) => {
+        const rowDiv = document.createElement('div');
+
+        row.forEach((cell, colIndex) => {
+        const btn = document.createElement('button');
+        btn.textContent = cell || ' ';
+        btn.style.width = '50px';
+        btn.style.height = '50px';
+        btn.style.fontSize = '20px';
+        btn.onclick = async () => {
+            const res = await fetch('make_move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+            row: rowIndex,
+            col: colIndex,
+            player: 'X'
+          })
+        });
+      const data = await res.json();
+      const board = data.board || data;
+
+      renderBoard(board);
+
+      if (data.message === "Game Over") {
+        document.getElementById('status').textContent = "Game Over!";
+      } else {
+        document.getElementById('status').textContent = "";
+      }
+    };
+        rowDiv.appendChild(btn);
+        });
+
+        boardDiv.appendChild(rowDiv);
+    });
+  }
+
+</script>
+</body>
+</html>

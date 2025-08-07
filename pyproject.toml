@@ -1,0 +1,14 @@
+[project]
+name = "tic-tac-toe"
+version = "0.1.0"
+description = "A simple Tic Tac Toe game with a backend and UI built in Python"
+authors = [
+    { name = "Sathvik Sethuraman", email = "sathvikkavisethuraman@gmail.com" }
+]
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "pygame",
+    "tk",
+    "flask"
+]
