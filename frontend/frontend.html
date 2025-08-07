@@ -45,6 +45,7 @@
         method: 'POST'
     });
     const board = await res.json();
+    document.getElementById('status').textContent = "";
     renderBoard(board);
     }
 
@@ -75,7 +76,6 @@
       const board = data.board || data;
 
       renderBoard(board);
-
       if (data.message === "Game Over") {
         document.getElementById('status').textContent = "Game Over!";
       } else {
