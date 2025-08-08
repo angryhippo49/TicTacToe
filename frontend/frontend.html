@@ -4,7 +4,6 @@
   <title>Tic Tac Toe</title>
 </head>
 
-
 <style>
   #container {
     display: flex;
@@ -27,68 +26,114 @@
     font-size: 20px;
     text-align: center;
   }
+
+  #start-options {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  #start-options button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+  }
 </style>
-
-
-
 
 <body>
   <div id="container">
-    <button onclick="createBoard()">Start Game</button>
+    <div id="start-options">
+      <p>Do you want to go first?</p>
+      <button onclick="startGame('Yes')">Yes</button>
+      <button onclick="startGame('No')">No</button>
+    </div>
     <div id="board"></div>
-    <div id="status" style="margin-top: 10px; font-weight: bold;"></div>  <!-- 👈 add this line -->
+    <div id="status" style="margin-top: 10px; font-weight: bold;"></div>
   </div>
 
 <script>
-    async function createBoard() {
-    const res = await fetch('create_new_board', {
-        method: 'POST'
-    });
-    const board = await res.json();
-    document.getElementById('status').textContent = "";
-    renderBoard(board);
+    let gameTurn = 'Yes'; // Track who goes first
+    let gameBoard = null;
+
+    async function startGame(turn) {
+        gameTurn = turn;
+        document.getElementById('start-options').style.display = 'none';
+        
+        // Create new board
+        const res = await fetch('create_new_board', {
+            method: 'POST'
+        });
+        gameBoard = await res.json();
+        document.getElementById('status').textContent = "";
+        renderBoard(gameBoard);
+        
+        // If computer goes first, make computer move
+        if (turn === 'No') {
+            await makeComputerMove();
+        }
     }
 
-    function renderBoard(board) {
-    const boardDiv = document.getElementById('board');
-    boardDiv.innerHTML = '';
-
-    board.forEach((row, rowIndex) => {
-        const rowDiv = document.createElement('div');
-
-        row.forEach((cell, colIndex) => {
-        const btn = document.createElement('button');
-        btn.textContent = cell || ' ';
-        btn.style.width = '50px';
-        btn.style.height = '50px';
-        btn.style.fontSize = '20px';
-        btn.onclick = async () => {
+    async function makeComputerMove() {
+        try {
             const res = await fetch('make_move', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-            row: rowIndex,
-            col: colIndex,
-            player: 'X'
-          })
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    turn: gameTurn
+                })
+            });
+            const data = await res.json();
+            gameBoard = data.board || data;
+            renderBoard(gameBoard);
+            
+            // Check for game over message
+            if (data.message === "Game Over") {
+                document.getElementById('status').textContent = "Game Over!";
+            }
+        } catch (error) {
+            console.error('Error with computer move:', error);
+        }
+    }
+
+    async function renderBoard(board) {
+        const boardDiv = document.getElementById('board');
+        boardDiv.innerHTML = '';
+
+        board.forEach((row, rowIndex) => {
+            const rowDiv = document.createElement('div');
+
+            row.forEach((cell, colIndex) => {
+                const btn = document.createElement('button');
+                btn.textContent = cell || ' ';
+                btn.style.width = '50px';
+                btn.style.height = '50px';
+                btn.style.fontSize = '20px';
+                btn.onclick = async () => {
+                    // Make player move (backend will automatically make computer move)
+                    const playerRes = await fetch('make_move', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            row: rowIndex,
+                            col: colIndex,
+                            player: 'X',
+                            turn: gameTurn
+                        })
+                    });
+                    const data = await playerRes.json();
+                    gameBoard = data.board || data;
+                    renderBoard(gameBoard);
+                    
+                    // Check for game over message
+                    if (data.message === "Game Over") {
+                        document.getElementById('status').textContent = "Game Over!";
+                    }
+                };
+                rowDiv.appendChild(btn);
+            });
+
+            boardDiv.appendChild(rowDiv);
         });
-      const data = await res.json();
-      const board = data.board || data;
-
-      renderBoard(board);
-      if (data.message === "Game Over") {
-        document.getElementById('status').textContent = "Game Over!";
-      } else {
-        document.getElementById('status').textContent = "";
-      }
-    };
-        rowDiv.appendChild(btn);
-        });
-
-        boardDiv.appendChild(rowDiv);
-    });
-  }
-
+    }
 </script>
 </body>
 </html>
